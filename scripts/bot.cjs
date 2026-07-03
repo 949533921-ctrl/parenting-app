@@ -199,20 +199,62 @@ if (require.main === module) {
       return;
     }
 
-    // ===== 飞书/企微 Webhook =====
+        // ===== 飞书/企微 Webhook =====
     if (req.method === "POST" && requestPath === "/webhook") {
-      let body = "";
-      req.on("data", chunk => body += chunk);
+      let rawBody = "";
+      req.on("data", chunk => rawBody += chunk);
       req.on("end", async () => {
         try {
-          const data = JSON.parse(body);
-          // 兼容飞书和企微格式
-          const question = data.text || data.content || data.text?.content || "";
+          const data = JSON.parse(rawBody);
+
+          // 1. 飞书 URL 验证（配置回调地址时必须处理）
+          if (data.type === "url_verification") {
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ challenge: data.challenge }));
+            return;
+          }
+
+          // 2. 飞书事件回调格式
+          let question = "";
+          if (data.type === "event_callback" && data.event) {
+            // 从 event.message.content 提取（格式：{"text":"@机器人 问题"}）
+            try {
+              const msgContent = JSON.parse(data.event.message?.content || "{}");
+              question = msgContent.text || "";
+            } catch {}
+            // 或者直接从 event.text_without_at_bot 取
+            if (!question) question = data.event.text_without_at_bot || data.event.text || "";
+          }
+
+          // 3. 兼容简单格式
+          if (!question) {
+            if (typeof data.text === "string") question = data.text;
+            else if (data.text?.content) question = data.text.content;
+            else if (typeof data.content === "string") question = data.content;
+          }
+
+          // 清理 @ 机器人的标记
+          question = question.replace(/@[^\s]+\s*/g, "").trim();
+
           if (!question) {
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(JSON.stringify({}));
             return;
           }
+
+          const answer = await askBot(question);
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({
+            msg_type: "text",
+            content: JSON.stringify({ text: answer })
+          }));
+        } catch (e) {
+          res.writeHead(200);
+          res.end(JSON.stringify({}));
+        }
+      });
+      return;
+    }
           const answer = await askBot(question);
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify({
