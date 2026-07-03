@@ -1,0 +1,24 @@
+﻿name: 每日育儿知识推送
+
+on:
+  schedule:
+    # 每天早上 8:00 (北京时间)  = UTC 00:00
+    - cron: '0 0 * * *'
+  workflow_dispatch:  # 也可以手动触发
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 发送飞书推送
+        run: node scripts/push-daily.cjs
+        env:
+          FEISHU_WEBHOOK_0_6: ${{ secrets.FEISHU_WEBHOOK_0_6 }}
+          FEISHU_WEBHOOK_6_12: ${{ secrets.FEISHU_WEBHOOK_6_12 }}
+          FEISHU_WEBHOOK_1_1_5: ${{ secrets.FEISHU_WEBHOOK_1_1_5 }}
+          FEISHU_WEBHOOK_1_5_2: ${{ secrets.FEISHU_WEBHOOK_1_5_2 }}
+          FEISHU_WEBHOOK_2_3: ${{ secrets.FEISHU_WEBHOOK_2_3 }}

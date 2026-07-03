@@ -1,0 +1,19 @@
+﻿*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #FDF2F8 0%, #FFF7ED 30%, #FEF3C7 60%, #ECFDF5 100%);
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+#root {
+  max-width: 860px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px);
+  position: relative;
+  box-shadow: 0 0 40px rgba(0,0,0,0.06);
+}
