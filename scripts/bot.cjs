@@ -1,4 +1,4 @@
-// 🌟 爱的养育 - AI育儿顾问机器人
+﻿// 🌟 爱的养育 - AI育儿顾问机器人
 // 使用：node scripts/bot.cjs （需要设置 API Key）
 // 环境变量：
 //   LLM_API_KEY    - OpenAI / DeepSeek API Key
@@ -242,19 +242,6 @@ if (require.main === module) {
             return;
           }
 
-          const answer = await askBot(question);
-          res.writeHead(200, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({
-            msg_type: "text",
-            content: JSON.stringify({ text: answer })
-          }));
-        } catch (e) {
-          res.writeHead(200);
-          res.end(JSON.stringify({}));
-        }
-      });
-      return;
-    }
           const answer = await askBot(question);
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify({
