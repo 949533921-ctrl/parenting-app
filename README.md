@@ -41,3 +41,5 @@ node scripts/bot.cjs
 - 动画：Framer Motion
 - Markdown：React Markdown + remark-gfm
 - 推送：飞书群机器人 Webhook
+---
+首次自动推送测试
