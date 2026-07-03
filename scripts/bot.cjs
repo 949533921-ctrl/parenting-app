@@ -1,10 +1,10 @@
-﻿// 🌟 爱的养育 - AI育儿顾问机器人
+// 🌟 爱的养育 - AI育儿顾问机器人
 // 使用：node scripts/bot.cjs （需要设置 API Key）
 // 环境变量：
 //   LLM_API_KEY    - OpenAI / DeepSeek API Key
 //   LLM_MODEL      - 模型名 (默认 deepseek-chat)
 //   LLM_BASE_URL   - API 地址 (默认 https://api.deepseek.com)
-//   BOT_PORT       - 服务器端口 (默认 3000)
+//   PORT           - Railway 端口（自动注入）
 
 // ===== 知识库：权威育儿书籍 =====
 const KNOWLEDGE_BOOKS = [
@@ -69,7 +69,7 @@ async function askBot(question, ageGroup) {
   const apiKey = process.env.LLM_API_KEY || process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return "⚠️ 机器人还没配置好，请先设置 LLM_API_KEY 环境变量。";
-  }
+    }
 
   const baseURL = process.env.LLM_BASE_URL || "https://api.deepseek.com";
   const model = process.env.LLM_MODEL || "deepseek-chat";
@@ -105,14 +105,44 @@ async function askBot(question, ageGroup) {
     return data.choices?.[0]?.message?.content || "抱歉，我没有理解这个问题，能换个方式问问吗？";
   } catch (e) {
     return "🤖 机器人暂时联系不上，请稍后再试。";
-  }
+    }
 }
 
 // ===== Webhook 服务器 =====
 if (require.main === module) {
   const http = require("http");
+  const fs = require("fs");
+  const path = require("path");
   const url = require("url");
-  const port = process.env.BOT_PORT || 3000;
+  const port = process.env.PORT || process.env.BOT_PORT || 3000;
+  const distDir = path.join(__dirname, "..", "dist");
+
+  // ===== 静态文件 MIME 类型 =====
+  const MIME = {
+    ".html": "text/html; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".js": "application/javascript; charset=utf-8",
+    ".json": "application/json",
+    ".svg": "image/svg+xml",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".ico": "image/x-icon",
+    ".woff2": "font/woff2",
+  };
+
+  // ===== 伺服前端静态文件 =====
+  function serveStatic(res, filePath) {
+    const ext = path.extname(filePath);
+    const contentType = MIME[ext] || "application/octet-stream";
+    try {
+      const data = fs.readFileSync(filePath);
+      res.writeHead(200, { "Content-Type": contentType });
+      res.end(data);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   const server = http.createServer(async (req, res) => {
     // CORS
@@ -125,18 +155,29 @@ if (require.main === module) {
       return;
     }
 
-    const parsed = url.parse(req.url, true);
-    const path = parsed.pathname;
+    const parsedUrl = url.parse(req.url, true);
+    const requestPath = parsedUrl.pathname;
+
+    // SPA fallback: 如果请求的是根路径或前端路由，返回 index.html
+    const isApiRoute = requestPath === "/health" || requestPath === "/ask" || requestPath === "/webhook";
+    if (!isApiRoute) {
+      // 尝试按请求路径伺服文件
+      const localPath = requestPath === "/" ? "/index.html" : requestPath;
+      const filePath = path.join(distDir, localPath);
+      if (serveStatic(res, filePath)) return;
+      // 如果文件不存在（前端路由如 /favorites），回退到 index.html
+      if (serveStatic(res, path.join(distDir, "index.html"))) return;
+    }
 
     // ===== 健康检查 =====
-    if (req.method === "GET" && path === "/health") {
+    if (req.method === "GET" && requestPath === "/health") {
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ status: "ok", books: KNOWLEDGE_BOOKS.length }));
       return;
     }
 
     // ===== 问答接口 =====
-    if (req.method === "POST" && path === "/ask") {
+    if (req.method === "POST" && requestPath === "/ask") {
       let body = "";
       req.on("data", chunk => body += chunk);
       req.on("end", async () => {
@@ -159,7 +200,7 @@ if (require.main === module) {
     }
 
     // ===== 飞书/企微 Webhook =====
-    if (req.method === "POST" && path === "/webhook") {
+    if (req.method === "POST" && requestPath === "/webhook") {
       let body = "";
       req.on("data", chunk => body += chunk);
       req.on("end", async () => {

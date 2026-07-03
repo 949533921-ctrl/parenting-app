@@ -1,14 +1,15 @@
 {
-    "name":  "-",
+    "name":  "ai-parenting-advisor",
     "private":  true,
     "version":  "0.0.0",
     "type":  "module",
     "scripts":  {
                     "dev":  "vite",
-                    "build":  "tsc -b \u0026\u0026 vite build",
+                    "build":  "tsc -b && vite build",
                     "lint":  "oxlint",
                     "preview":  "vite preview",
-                    "start:bot":  "node scripts/bot.cjs"
+                    "start:bot":  "node scripts/bot.cjs",
+                    "start":  "node scripts/bot.cjs"
                 },
     "dependencies":  {
                          "framer-motion":  "^12.42.2",
