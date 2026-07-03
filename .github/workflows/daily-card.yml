@@ -1,6 +1,7 @@
 ﻿name: 每日育儿知识推送
 
 on:
+  push:
   schedule:
     # 每天早上 8:00 (北京时间)  = UTC 00:00
     - cron: '0 0 * * *'
