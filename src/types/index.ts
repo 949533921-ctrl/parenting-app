@@ -7,6 +7,7 @@
   ageGroup: AgeGroupId
   tip?: string
   source?: string
+  quote?: string
   isFeatured?: boolean
 }
 

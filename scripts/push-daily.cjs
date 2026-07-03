@@ -9,7 +9,7 @@ const endIdx = ts.indexOf("export function", startIdx);
 if (startIdx === -1 || endIdx === -1) { console.error("Could not find cards"); process.exit(1); }
 
 let arrStr = ts.substring(startIdx, endIdx).replace("export const cards: Card[] = ", "").trim();
-arrStr = arrStr.replace(/:\s*(string|CategoryId|AgeGroupId|boolean)\b/g, "");
+arrStr = arrStr.replace(/:\s*(string|CategoryId|AgeGroupId|boolean)\b/g, "").replace(/\?\s*:\s*string\b/g, "");
 let cards;
 try { cards = eval(arrStr); } catch (e) { console.error("Parse error:", e.message); process.exit(1); }
 if (!cards || cards.length === 0) { console.error("No cards"); process.exit(1); }
@@ -92,7 +92,7 @@ async function main() {
           elements: [
             { tag: "markdown", content: `**${dateStr}**\n\n**${c.title}**\n${c.summary}` },
             { tag: "hr" },
-            { tag: "markdown", content: `**📖 知识原文**\n${body}\n\n**📚 参考来源**\n${c.source || ""}${c.tip ? `\n\n💡 **温馨提示**\n${c.tip}` : ""}` },
+            { tag: "markdown", content: `**📖 知识卡片**\n${body}${c.quote ? `\n\n**📝 书中原文**\n${c.quote}` : ""}\n\n**📚 参考来源**\n${c.source || ""}${c.tip ? `\n\n💡 **温馨提示**\n${c.tip}` : ""}` },
             { tag: "hr" },
             
             { tag: "note", elements: [{ tag: "plain_text", content: "爱的养育 · 每天陪你学一点育儿知识" }] }
@@ -109,7 +109,7 @@ async function main() {
       const wechatMsg = {
         msgtype: "markdown",
         markdown: {
-          content: `**👶 ${g.label} · 今日育儿知识**\n${dateStr}\n---\n## ${c.title}\n${c.summary}\n\n**📖 知识原文**\n> ${body.replace(/\n/g, "\n> ")}\n---\n> 📚 ${c.source || ""}\n${c.tip ? `\n> 💡 ${c.tip}` : ""}\n\n💡 爱的养育 · 每天陪你学一点育儿知识`
+          content: `**👶 ${g.label} · 今日育儿知识**\n${dateStr}\n---\n## ${c.title}\n${c.summary}\n\n**📖 知识卡片**\n> ${body.replace(/\n/g, "\n> ")}${c.quote ? `\n\n> **📝 书中原文**\n> ${c.quote.replace(/\n/g, "\n> ")}` : ""}\n---\n> 📚 ${c.source || ""}${c.tip ? `\n> 💡 ${c.tip}` : ""}\n\n💡 爱的养育 · 每天陪你学一点育儿知识`
         }
       };
       await send(wechatUrl, wechatMsg, g.label + "(微信)");
